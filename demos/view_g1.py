@@ -41,6 +41,18 @@ def main():
         default=0.0,
         help="Auto-close after N seconds (0 = run until window closed)",
     )
+    parser.add_argument(
+        "--distance", type=float, default=5.0,
+        help="Camera distance from robot (default 5.0 = comfortably zoomed out)",
+    )
+    parser.add_argument(
+        "--elevation", type=float, default=-15.0,
+        help="Camera elevation in degrees, negative looks down (default -15)",
+    )
+    parser.add_argument(
+        "--azimuth", type=float, default=135.0,
+        help="Camera azimuth in degrees (default 135 = 3/4 front view)",
+    )
     args = parser.parse_args()
 
     model_path = os.path.abspath(args.model)
@@ -57,6 +69,14 @@ def main():
     print(f"[wl-robotics] launching viewer — drag to orbit, scroll to zoom")
 
     with mujoco.viewer.launch_passive(model, data) as viewer:
+        # Wider default camera so the whole humanoid + floor is visible
+        # without the user needing to scroll out manually. Override with
+        # --distance / --elevation / --azimuth.
+        viewer.cam.distance = args.distance
+        viewer.cam.elevation = args.elevation
+        viewer.cam.azimuth = args.azimuth
+        viewer.cam.lookat[2] = 0.7  # focus on the robot's torso, not the floor
+
         start = time.time()
         while viewer.is_running():
             step_start = time.time()
